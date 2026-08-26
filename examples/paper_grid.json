@@ -1,0 +1,19 @@
+{
+  "eos": {
+    "CMF2": "eos/eosCMF2",
+    "HLPS1": "eos/eosHLPS1",
+    "HLPS2": "eos/eosHLPS2",
+    "HLPS3": "eos/eosHLPS3",
+    "NL3": "eos/eosNL3",
+    "PKDD": "eos/eosPKDD",
+    "QHC21A": "eos/eosQHC21A"
+  },
+  "central_density_1e14_g_cm3": [3, 4, 5, 6, 7.5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30],
+  "spin_hz": [0.00001, 100, 200, 300, 400, 500, 600, 700, 800],
+  "inclination_deg": [0, 45, 90],
+  "latitude_bins": 128,
+  "longitude_bins": 128,
+  "temperature_kev": 0.0861733326,
+  "observer_distance_m": 6.1713552e18,
+  "rns_timeout_seconds": 300
+}

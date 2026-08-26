@@ -1,0 +1,14 @@
+NS-SWORD
+NS-SWORD.exe
+build_objs/*
+!build_objs/.gitkeep
+shape_functions/lib/*
+!shape_functions/lib/.gitkeep
+paper_data_*/
+rns/*
+!rns/README.md
+inputs/RNS_Shapes/*.csv
+inputs/atmosphere/nsx_H_v200804.out
+*.pyc
+__pycache__/
+*.log

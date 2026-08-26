@@ -1,0 +1,41 @@
+{
+  "schema_version": 2,
+  "active": "canonical",
+  "datasets": {
+    "canonical": {
+      "shape_library": "Papigkiotis",
+      "model_name": "PVLS",
+      "label": "PVLS",
+      "status": "production",
+      "feature_scaling": true,
+      "surface_script": "shape_functions/dependencies/Papigkiotis/ns_radius.py",
+      "derivative_script": "shape_functions/dependencies/Papigkiotis/ns_log_derivative.py",
+      "weights": "shape_functions/dependencies/Papigkiotis/Model"
+    },
+    "legacy": {
+      "shape_library": "Papigkiotis_old",
+      "model_name": "PVLS_old",
+      "label": "PVLS_old",
+      "status": "retained_for_reproducibility",
+      "feature_scaling": false,
+      "surface_script": "shape_functions/dependencies/Papigkiotis_old/ns_radius.py",
+      "derivative_script": "shape_functions/dependencies/Papigkiotis_old/ns_log_derivative.py",
+      "weights": "shape_functions/dependencies/Papigkiotis/Model"
+    }
+  },
+  "domain_policy": {
+    "trained_domain_only": true,
+    "out_of_domain_action": "exclude",
+    "bounds": {
+      "compactness": [0.0876346858172578, 0.3094541325480277],
+      "sigma": [0.0, 0.9612274013913829],
+      "eccentricity": [0.0, 0.7797886226038347],
+      "polar_to_equatorial_radius": [0.6260428931452016, 1.0]
+    }
+  },
+  "migration": {
+    "source_identity": "canonical",
+    "production_data": "validated",
+    "instruction": "Archive historical Papigkiotis/Papigkiotis_ML products as PVLS_old before replacing production PVLS rows with validated in-domain results."
+  }
+}
