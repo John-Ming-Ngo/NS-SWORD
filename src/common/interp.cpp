@@ -2,6 +2,7 @@
  * interp.c
  *
  * This file contains a collection of useful interpolation routines.
+ * Most code source comes from Numerical Recipes, by Press, Teukolsky, Vetterling, and Flannery.
  *
  ***************************************************************************/
 #include <stdio.h>
