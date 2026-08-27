@@ -1,6 +1,6 @@
 // Chi.cpp
 //
-// Computation of Chi-squared
+// ComputeAngles: Computation of the angles required in the Oblate Schwarzschild Approximation
 
 #include "../../include/matpack.h"
 
