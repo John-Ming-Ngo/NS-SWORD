@@ -1,4 +1,4 @@
-/* nrutil.c */
+/* nrutil.c - Functions from Numerical Recipes, by Press et al. */
 #if defined(__STDC__) || defined(ANSI) || defined(NRANSI) /* ANSI */
 
 #include <stdio.h>
