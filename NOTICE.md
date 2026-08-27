@@ -1,6 +1,6 @@
 # Notice
 
-NS-SWORD contains code developed from the lightcurve code of Coire Cadeau and later modified and expanded by John Ming Ngo. 
+NS-SWORD contains code developed from the lightcurve code of Coire Cadeau and later modified and expanded by Albert Tung, Abigail Stevens, Charlee Amason, Sharon Morsink, and John Ming Ngo. 
 
 The PVLS Python model and its weights were copied and adapted from the repository of Gregory Papigkiotis and collaborators:
 
