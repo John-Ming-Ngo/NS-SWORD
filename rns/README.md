@@ -4,7 +4,7 @@ RNS is not included. Obtain it separately from:
 
 https://github.com/rns-alberta/rns
 
-It may be placed in this directory or kept elsewhere. /run_paper_grid.py uses it through `--rns`.
+It may be placed in this directory or kept elsewhere. `scripts/run_paper_grid.py` uses it through `--rns`.
 
 The EOS files must have the names and locations given in `examples/paper_grid.json`, relative to the RNS directory. The RNS output must contain the mass, equatorial radius, spin frequency, and a table headed by `Mu, Radius (KM)` or `Mu, Radii (KM)`. The parser also accepts the full-precision `RNS_EXACT` line used in our calculations.
 
@@ -16,13 +16,13 @@ Two RNS builds were used in the paper:
 Run the first build with:
 
 ```text
-python scripts/run_paper_grid.py --rns PATH_TO_RNS --atmosphere PATH_TO_nsx_H_v200804.out --output paper_data_261x2081
+python scripts/run_paper_grid.py --rns PATH_TO_RNS --output paper_data_261x2081
 ```
 
-For example, from the NS-SWORD repository root on Windows, with the executable and atmosphere table in their standard directories, run:
+For example, from the NS-SWORD repository root on Windows, with the executable in its standard directory, run:
 
 ```text
-python scripts/run_paper_grid.py --rns rns/rns.exe --atmosphere inputs/atmosphere/nsx_H_v200804.out --output paper_data_261x2081
+python scripts/run_paper_grid.py --rns rns/rns.exe --output paper_data_261x2081
 ```
 
 On Linux or macOS, use `--rns rns/rns` instead.

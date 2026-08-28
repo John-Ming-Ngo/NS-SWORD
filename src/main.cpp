@@ -908,7 +908,7 @@ void write_model_statistics(MainParams& MainParams, RunOutputs& RunOutputs) {
     out.close();
 }
 
-void write_spectra(const MainParams& MainParams, const RunOutputs& RunOutputs) {
+void write_spectra(const MainParams& MainParams, const RunOutputs& RunOutputs, bool NSXHAvailable) {
     std::string outFile = MainParams.outputFilesDirectories.spectra_output_file;
     std::string dirPath = outFile.substr(0, outFile.find_last_of("/\\"));
     if (!create_directories(dirPath)) {
@@ -920,10 +920,12 @@ void write_spectra(const MainParams& MainParams, const RunOutputs& RunOutputs) {
     PrintSpectrum(RunOutputs.BBSpectralFluxMap, &bbout);
     bbout.close();
 
-    std::ofstream hout;
-    hout.open(outFile + "H.csv", std::ios::trunc);
-    PrintSpectrum(RunOutputs.HSpectralFluxMap, &hout);
-    hout.close();
+    if (NSXHAvailable) {
+        std::ofstream hout;
+        hout.open(outFile + "H.csv", std::ios::trunc);
+        PrintSpectrum(RunOutputs.HSpectralFluxMap, &hout);
+        hout.close();
+    }
 }
 
 void write_spot_grid(const MainParams& MainParams, std::vector<std::vector<SpotData>>& StarGrid) {
@@ -965,6 +967,8 @@ try
         write_shape_file_only(MainParams);
         return 0;
   }
+
+  const bool NSXHAvailable = NSXHTableExists();
 
   // Initialize Global Data Containers (ex. what bins they should be recording for)
   SetupQuadFDModels(&MainParams); // Todo: This is a terrible function, and should be replaced. Also doesn't do anything relevant yet.
@@ -1008,7 +1012,9 @@ try
   //==
   InitializeStarGridSpectra(&StarGrid, &MainParams.starParams);
   CalculateSpotBBSpectra(&StarGrid, MainParams.starParams.mass);
-  CalculateSpotHSpectra(&StarGrid, MainParams.starParams.mass);
+  if (NSXHAvailable) {
+    CalculateSpotHSpectra(&StarGrid, MainParams.starParams.mass);
+  }
 
   //==
   CalculateSpotSBFlux(&StarGrid);
@@ -1021,7 +1027,9 @@ try
   InitializeSpectrumMap(&RunOutputs.BBSpectralFluxMap, &MainParams.starParams);
   InitializeSpectrumMap(&RunOutputs.HSpectralFluxMap, &MainParams.starParams);
   SumBBSpectra(&StarGrid, &RunOutputs.BBSpectralFluxMap);
-  SumHSpectra(&StarGrid, &RunOutputs.HSpectralFluxMap);
+  if (NSXHAvailable) {
+    SumHSpectra(&StarGrid, &RunOutputs.HSpectralFluxMap);
+  }
 
   /**
    * What gets printed out is handled by the Print Header in MainStructs.h!
@@ -1053,9 +1061,11 @@ try
 
   //==
   RunOutputs.outputs["BB Bolometric Flux (Local Area Integral in ergs/cm^2/s)"] = DoubleToString(SumLocalBlackBodyFlux(&StarGrid), OUTPUT_PRECISION);
-  RunOutputs.outputs["H Bolometric Flux (Local Area Integral in ergs/cm^2/s)"] = DoubleToString(SumLocalHydrogenFlux(&StarGrid), OUTPUT_PRECISION);
   RunOutputs.outputs["BB Bolometric Flux (Flux Spectrum Integral in ergs/cm^2/s)"] = DoubleToString(spectrum_integrate(RunOutputs.BBSpectralFluxMap), OUTPUT_PRECISION);
-  RunOutputs.outputs["H Bolometric Flux (Flux Spectrum Integral in ergs/cm^2/s)"] = DoubleToString(spectrum_integrate(RunOutputs.HSpectralFluxMap), OUTPUT_PRECISION);
+  if (NSXHAvailable) {
+    RunOutputs.outputs["H Bolometric Flux (Local Area Integral in ergs/cm^2/s)"] = DoubleToString(SumLocalHydrogenFlux(&StarGrid), OUTPUT_PRECISION);
+    RunOutputs.outputs["H Bolometric Flux (Flux Spectrum Integral in ergs/cm^2/s)"] = DoubleToString(spectrum_integrate(RunOutputs.HSpectralFluxMap), OUTPUT_PRECISION);
+  }
 
   RunOutputs.outputs["Steph-Boltzmann BB Flux (ergs/cm^2/s)"] = DoubleToString(SumStephBoltz(&StarGrid), OUTPUT_PRECISION);
   RunOutputs.outputs["Steph-Boltzmann BB Flux (ergs/cm^2/s) No Doppler"] = DoubleToString(SumStephBoltzNoDoppler(&StarGrid), OUTPUT_PRECISION);
@@ -1099,7 +1109,7 @@ try
   if (MainParams.mainFlags.model_statistics_to_file) write_model_statistics(MainParams, RunOutputs);
   else PrintOutput(RunOutputs.outputs, MainParams.GetFullHeader());
 
-  if (MainParams.mainFlags.spectra_to_file) write_spectra(MainParams, RunOutputs);
+  if (MainParams.mainFlags.spectra_to_file) write_spectra(MainParams, RunOutputs, NSXHAvailable);
 
   //std::cout << "Is supposed to output data files: " << MainParams.mainFlags.grid_to_file << std::endl;
   if (MainParams.mainFlags.grid_to_file) write_spot_grid(MainParams,StarGrid);

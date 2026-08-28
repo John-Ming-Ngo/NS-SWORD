@@ -8,6 +8,8 @@
 
 int th_index_nsx(double cos_theta, class LightCurve* mexmcc);
 
+bool NSXHTableExists();
+
 void ReadNSXH(class Atmo* atmo);
 
 

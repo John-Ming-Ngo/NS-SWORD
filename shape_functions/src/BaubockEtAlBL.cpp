@@ -12,7 +12,22 @@
 
 BaubockOblModel::BaubockOblModel(double req_nounits, double mass_nounits, double omega_nounits)
 : OblModelBase(req_nounits, mass_nounits, omega_nounits), Req_HT(req_nounits), radius_scale(1.0) {
-  Req_HT = findReqHT(req_nounits);
+  const double raw_equator = R_at_costheta(0.0);
+  const double candidate_scale = req_nounits / raw_equator;
+  bool valid_profile = std::isfinite(candidate_scale) && candidate_scale > 0.0;
+  const double dtheta = (Units::PI - 1.0e-6) / 128.0;
+  for (int i = 0; valid_profile && i < 128; i++) {
+    const double theta = i * dtheta + 1.0e-6 + 0.5 * dtheta;
+    const double mu = cos(theta);
+    const double radius = R_at_costheta(mu) * candidate_scale;
+    valid_profile = std::isfinite(radius) && radius > 0.0;
+  }
+  if (valid_profile) {
+    radius_scale = candidate_scale;
+  }
+  else {
+    Req_HT = findReqHT(req_nounits);
+  }
   model_name = "Baubock_BL";
 }
 
@@ -20,17 +35,31 @@ BaubockOblModel::BaubockOblModel(double req_nounits, double mass_nounits, double
 const double G = Units::G * 1e-3;  // Gravitational constant in m^3/kg/s^2
 const double c = Units::C / 100;        // Speed of light in m/s
 double BaubockOblModel::findReqHT(double req_nounits) {
-  // Preserve the complete Hartle-Thorne profile and normalize it by one
-  // smooth multiplicative factor so its evaluated equator is exactly the
-  // supplied physical equatorial radius.  This avoids both the old loose
-  // iterative tolerance and spurious roots in extreme cases.
   Req_HT = req_nounits;
-  radius_scale = 1.0;
-  const double raw_equator = R_at_costheta(0.0);
-  if (!std::isfinite(raw_equator) || raw_equator <= 0.0) {
-    throw std::runtime_error("Baubock: invalid equatorial radius during normalization");
+  double factor = 0.2;
+  const double epsilon = 1.0e-8;
+  int iterations = 0;
+
+  while (req_nounits - R_at_costheta(0.0) > epsilon) {
+    Req_HT *= 1.0 + factor;
+    if (req_nounits - R_at_costheta(0.0) < 0.0) {
+      Req_HT /= 1.0 + factor;
+      factor /= 2.0;
+    }
+    if (!std::isfinite(Req_HT) || ++iterations > 10000) {
+      throw std::runtime_error("Baubock: equatorial-radius search did not converge");
+    }
   }
-  radius_scale = req_nounits / raw_equator;
+  while (R_at_costheta(0.0) - req_nounits > epsilon) {
+    Req_HT *= 1.0 - factor;
+    if (R_at_costheta(0.0) - req_nounits < 0.0) {
+      Req_HT /= 1.0 - factor;
+      factor /= 2.0;
+    }
+    if (!std::isfinite(Req_HT) || ++iterations > 10000) {
+      throw std::runtime_error("Baubock: equatorial-radius search did not converge");
+    }
+  }
   return Req_HT;
 }
 

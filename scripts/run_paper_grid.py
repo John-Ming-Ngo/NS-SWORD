@@ -1,4 +1,9 @@
-"""Generate the complete raw data set for the parameter grid in Table III."""
+"""Generate the complete raw data set for the parameter grid in Table III.
+
+This helper script was generated with ChatGPT. It runs RNS, keeps the valid
+stellar models, and passes them to NS-SWORD. It is not part of the core
+NS-SWORD calculation.
+"""
 
 from __future__ import annotations
 
@@ -49,6 +54,8 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--rns", help="Path to the RNS executable")
     parser.add_argument("--atmosphere", help="Path to nsx_H_v200804.out")
     parser.add_argument("--workers", type=int, default=1)
+    parser.add_argument("--rns-workers", type=int)
+    parser.add_argument("--rns-timeout", type=int)
     parser.add_argument("--shapes-only", action="store_true")
     parser.add_argument("--plan", action="store_true")
     return parser.parse_args()
@@ -217,7 +224,19 @@ def run_program(command_values: list[str], expected: tuple[Path, ...], executabl
         command.extend((flag, value))
     command.extend(command_values[len(PARAM_HEADER):])
     process = subprocess.run(command, cwd=ROOT, env=environment, capture_output=True, text=True)
-    if process.returncode != 0 or not all(path.is_file() and path.stat().st_size > 0 for path in expected):
+    latitude_bins = int(command_values[7])
+    longitude_bins = int(command_values[9])
+    complete = []
+    for path in expected:
+        valid = path.is_file() and path.stat().st_size > 0
+        if valid and "shape_outputs" in path.parts:
+            with path.open("rb") as handle:
+                valid = sum(block.count(b"\n") for block in iter(lambda: handle.read(1024 * 1024), b"")) == latitude_bins + 2
+        if valid and "spot_grids" in path.parts:
+            with path.open("rb") as handle:
+                valid = sum(block.count(b"\n") for block in iter(lambda: handle.read(1024 * 1024), b"")) == latitude_bins * longitude_bins + 1
+        complete.append(valid)
+    if process.returncode != 0 or not all(complete):
         message = process.stderr.strip() or process.stdout.strip() or f"NS-SWORD returned {process.returncode}"
         return "failed", message.replace("\r", " ").replace("\n", " ")[:1000]
     return "ok", ""
@@ -227,8 +246,14 @@ def main() -> int:
     args = arguments()
     if args.workers < 1:
         raise ValueError("--workers must be at least 1")
+    rns_workers = args.rns_workers if args.rns_workers is not None else min(args.workers, 4)
+    if rns_workers < 1:
+        raise ValueError("--rns-workers must be at least 1")
     config_path = absolute(args.config)
     config = load_config(config_path)
+    rns_timeout = args.rns_timeout if args.rns_timeout is not None else int(config["rns_timeout_seconds"])
+    if rns_timeout < 1:
+        raise ValueError("--rns-timeout must be at least 1")
     nominal = len(config["eos"]) * len(config["central_density_1e14_g_cm3"]) * len(config["spin_hz"])
     print(f"RNS models: {nominal}")
     print(f"shape files, at most: {nominal * len(MODELS)}")
@@ -245,9 +270,9 @@ def main() -> int:
     all_cases = cases(config, rns_root)
     manifest_path = output / "model_manifest.csv"
     manifest: list[dict[str, str]] = []
-    with ThreadPoolExecutor(max_workers=args.workers) as pool:
+    with ThreadPoolExecutor(max_workers=rns_workers) as pool:
         futures = {
-            pool.submit(run_rns, case, rns_exe, output, int(config["rns_timeout_seconds"])): case
+            pool.submit(run_rns, case, rns_exe, output, rns_timeout): case
             for case in all_cases
         }
         for index, future in enumerate(as_completed(futures), 1):
@@ -262,8 +287,8 @@ def main() -> int:
 
     ns_sword = find_executable(None, ("NS-SWORD.exe", "NS-SWORD"), "NS-SWORD")
     atmosphere = absolute(args.atmosphere) if args.atmosphere else ROOT / "inputs/atmosphere/nsx_H_v200804.out"
-    if not args.shapes_only and not atmosphere.is_file():
-        raise FileNotFoundError("the hydrogen atmosphere table was not found; see inputs/atmosphere/README.md")
+    if args.atmosphere and not atmosphere.is_file():
+        raise FileNotFoundError(f"hydrogen atmosphere table not found: {atmosphere}")
     environment = os.environ.copy()
     environment["NS_SWORD_RNS_DIR"] = str((output / "rns_surfaces").resolve())
     if atmosphere.is_file():

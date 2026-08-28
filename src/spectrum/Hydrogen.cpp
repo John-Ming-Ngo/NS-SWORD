@@ -182,6 +182,13 @@ void write_nsx_cache(const Atmo* atmo, const NSXSourceIdentity& source) {
 
 } // namespace
 
+bool NSXHTableExists() {
+  FILE *Hspecttable = fopen(nsx_h_source_path(), "r");
+  if (!Hspecttable) return false;
+  fclose(Hspecttable);
+  return true;
+}
+
 
 
 // Computes the correct theta index for NSX
@@ -412,5 +419,4 @@ void CleanNSXH(class Atmo* atmo, class Spectrum* spectrum){
        free_dvector(spectrum->intensity,0,atmo->NlogE);
  
 }
-
 
