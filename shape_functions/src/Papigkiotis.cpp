@@ -1,4 +1,4 @@
-/* ---------- Papigkiotis.cpp  (excerpt) ----------------------- */
+/* ---------- Papigkiotis.cpp ----------------------- */
 #include "Papigkiotis.h"
 
 #include <cstdio>          // popen, pclose
@@ -17,10 +17,9 @@
 #include "../../include/interp_functions.h"
 
 /*
- * Canonical PVLS implementation.
- *
- * The defaults below select the feature-scaled inference entry points.
- * Papigkiotis_old.cpp overrides them to retain the historical implementation.
+ * Our PVLS implementation
+ * Refactored in 2026 using ChatGPT. 
+ * Note: Feature scaling is very important.
  */
 #ifndef PAPIGKIOTIS_SURFACE_SCRIPT
 #define PAPIGKIOTIS_SURFACE_SCRIPT "shape_functions/dependencies/Papigkiotis/ns_radius.py"
